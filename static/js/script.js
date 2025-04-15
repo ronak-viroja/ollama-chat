@@ -18,60 +18,71 @@ function sendMessage() {
     const model = document.getElementById("model").value;
     const message = document.getElementById("message").value.trim();
     const chatWindow = document.getElementById("chat-window");
+    const convType = document.getElementById("conv-type").value;
 
     if (!model) {
         alert("Please select a model");
         return;
     }
 
-    if (!message) {
-        alert("Please enter a message");
+    if (!message && !document.getElementById("file-input").files.length) {
+        alert("Please enter a message or attach a file");
         return;
     }
 
     // Display user message
     const userDiv = document.createElement("div");
     userDiv.className = "message user";
-    userDiv.textContent = "You: " + message;
+    userDiv.textContent = `You (${convType}): ` + message;
     chatWindow.appendChild(userDiv);
     chatWindow.scrollTop = chatWindow.scrollHeight;
 
+    // Handle file upload if present
+    const fileInput = document.getElementById("file-input");
+    let formData = new FormData();
+    if (fileInput.files.length > 0) {
+        formData.append("file", fileInput.files[0]);
+        fetch("/api/upload", {
+            method: "POST",
+            body: formData
+        })
+        .then(response => response.text())
+        .then(data => console.log(data))
+        .catch(error => console.error("File upload error:", error));
+    }
+
     // Send message to server
-    fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ model, message })
-    })
+    if (message) {
+        fetch("/api/chat", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ model, message })
+        })
         .then(response => response.json())
         .then(data => {
-            // Process bot response
             const botDiv = document.createElement("div");
             botDiv.className = "message bot";
 
-            // Detect code blocks (e.g., ```language\ncode\n```)
             const codeBlockRegex = /```(\w+)?\n([\s\S]*?)\n```/g;
             let response = data.response;
             let lastIndex = 0;
             let htmlContent = '';
 
             response.replace(codeBlockRegex, (match, language, code, index) => {
-                // Add text before code block
                 htmlContent += escapeHtml(response.slice(lastIndex, index));
-                // Add formatted code block
                 const langClass = language ? `language-${language}` : 'language-text';
-                htmlContent += `<pre><code class="${langClass}">${escapeHtml(code)}</code></pre>`;
+                htmlContent += `<pre><code class="${langClass}">${escapeHtml(code)}</code><button class="copy-btn" onclick="copyCode(this)">Copy</button></pre>`;
                 lastIndex = index + match.length;
                 return match;
             });
 
-            // Add remaining text
             htmlContent += escapeHtml(response.slice(lastIndex));
-
+            // Highlight important terms (e.g., "Running the Server")
+            htmlContent = htmlContent.replace(/\b(Running the Server|Important)\b/g, '<span class="highlight">$&</span>');
             botDiv.innerHTML = "Bot: " + htmlContent;
             chatWindow.appendChild(botDiv);
             chatWindow.scrollTop = chatWindow.scrollHeight;
 
-            // Apply Prism.js highlighting
             Prism.highlightAllUnder(botDiv);
         })
         .catch(error => {
@@ -81,12 +92,20 @@ function sendMessage() {
             errorDiv.textContent = "Bot: Error communicating with server";
             chatWindow.appendChild(errorDiv);
         });
+    }
 
-    // Clear input
     document.getElementById("message").value = "";
+    fileInput.value = ""; // Clear file input
 }
 
-// Escape HTML to prevent XSS and preserve code formatting
+function copyCode(button) {
+    const code = button.previousSibling.textContent;
+    navigator.clipboard.writeText(code).then(() => {
+        button.textContent = "Copied!";
+        setTimeout(() => { button.textContent = "Copy"; }, 2000);
+    });
+}
+
 function escapeHtml(text) {
     const div = document.createElement("div");
     div.textContent = text;
