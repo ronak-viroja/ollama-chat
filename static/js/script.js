@@ -44,12 +44,35 @@ function sendMessage() {
     })
         .then(response => response.json())
         .then(data => {
-            // Display bot response
+            // Process bot response
             const botDiv = document.createElement("div");
             botDiv.className = "message bot";
-            botDiv.textContent = "Bot: " + data.response;
+
+            // Detect code blocks (e.g., ```language\ncode\n```)
+            const codeBlockRegex = /```(\w+)?\n([\s\S]*?)\n```/g;
+            let response = data.response;
+            let lastIndex = 0;
+            let htmlContent = '';
+
+            response.replace(codeBlockRegex, (match, language, code, index) => {
+                // Add text before code block
+                htmlContent += escapeHtml(response.slice(lastIndex, index));
+                // Add formatted code block
+                const langClass = language ? `language-${language}` : 'language-text';
+                htmlContent += `<pre><code class="${langClass}">${escapeHtml(code)}</code></pre>`;
+                lastIndex = index + match.length;
+                return match;
+            });
+
+            // Add remaining text
+            htmlContent += escapeHtml(response.slice(lastIndex));
+
+            botDiv.innerHTML = "Bot: " + htmlContent;
             chatWindow.appendChild(botDiv);
             chatWindow.scrollTop = chatWindow.scrollHeight;
+
+            // Apply Prism.js highlighting
+            Prism.highlightAllUnder(botDiv);
         })
         .catch(error => {
             console.error("Error sending message:", error);
@@ -61,4 +84,11 @@ function sendMessage() {
 
     // Clear input
     document.getElementById("message").value = "";
+}
+
+// Escape HTML to prevent XSS and preserve code formatting
+function escapeHtml(text) {
+    const div = document.createElement("div");
+    div.textContent = text;
+    return div.innerHTML;
 }
