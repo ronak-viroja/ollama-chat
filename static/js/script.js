@@ -12,13 +12,19 @@ document.addEventListener("DOMContentLoaded", () => {
             });
         })
         .catch(error => console.error("Error loading models:", error));
+
+    // Initialize Prism
+    if (typeof Prism !== 'undefined') {
+        Prism.highlightAll();
+    } else {
+        console.error("Prism.js not loaded");
+    }
 });
 
 function sendMessage() {
     const model = document.getElementById("model").value;
     const message = document.getElementById("message").value.trim();
     const chatWindow = document.getElementById("chat-window");
-    const convType = document.getElementById("conv-type").value;
     const fileInput = document.getElementById("file-input");
 
     if (!model) {
@@ -31,10 +37,10 @@ function sendMessage() {
         return;
     }
 
-    // Display user message
+    // Display user message without prefix
     const userDiv = document.createElement("div");
     userDiv.className = "message user";
-    userDiv.textContent = `You (${convType}): ` + (message || "File attached");
+    userDiv.textContent = message || "File attached";
     chatWindow.appendChild(userDiv);
     chatWindow.scrollTop = chatWindow.scrollHeight;
 
@@ -75,17 +81,21 @@ function sendMessage() {
 
         htmlContent += escapeHtml(response.slice(lastIndex));
         htmlContent = htmlContent.replace(/\b(Running the Server|Important)\b/g, '<span class="highlight">$&</span>');
-        botDiv.innerHTML = "Bot: " + htmlContent;
+        botDiv.innerHTML = htmlContent; // Removed "Bot: " prefix
         chatWindow.appendChild(botDiv);
         chatWindow.scrollTop = chatWindow.scrollHeight;
 
-        Prism.highlightAllUnder(botDiv);
+        if (typeof Prism !== 'undefined') {
+            Prism.highlightAllUnder(botDiv);
+        } else {
+            console.error("Prism.js not loaded for highlighting");
+        }
     })
     .catch(error => {
         console.error("Error:", error);
         const errorDiv = document.createElement("div");
         errorDiv.className = "message bot";
-        errorDiv.textContent = "Bot: " + error.message;
+        errorDiv.textContent = error.message;
         chatWindow.appendChild(errorDiv);
     });
 
