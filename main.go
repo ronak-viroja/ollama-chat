@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"html/template"
+	"io"
 	"net/http"
 	"os/exec"
 	"strings"
@@ -79,7 +80,6 @@ func main() {
 			return
 		}
 
-		// Prepare request to Ollama API
 		ollamaReq := map[string]interface{}{
 			"model":  req.Model,
 			"prompt": req.Message,
@@ -87,7 +87,6 @@ func main() {
 		}
 		ollamaBody, _ := json.Marshal(ollamaReq)
 
-		// Send request to Ollama
 		resp, err := http.Post("http://localhost:11434/api/generate", "application/json", bytes.NewBuffer(ollamaBody))
 		if err != nil {
 			http.Error(w, "Error communicating with Ollama", http.StatusInternalServerError)
@@ -95,7 +94,6 @@ func main() {
 		}
 		defer resp.Body.Close()
 
-		// Parse Ollama response
 		var ollamaResp struct {
 			Response string `json:"response"`
 		}
@@ -104,9 +102,26 @@ func main() {
 			return
 		}
 
-		// Send response back to client
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(ChatResponse{Response: ollamaResp.Response})
+	})
+
+	// API to handle file upload
+	http.HandleFunc("/api/upload", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+		file, _, err := r.FormFile("file")
+		if err != nil {
+			http.Error(w, "Error uploading file", http.StatusBadRequest)
+			return
+		}
+		defer file.Close()
+
+		// Log filename (expandable to process file later)
+		fmt.Println("File uploaded:", r.FormValue("file"))
+		w.Write([]byte("File uploaded successfully"))
 	})
 
 	fmt.Println("Server starting on http://localhost:8080")
