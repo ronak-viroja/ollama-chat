@@ -73,46 +73,48 @@ func main() {
 
 	// API to handle chat
 	http.HandleFunc("/api/chat", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodPost {
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-			return
-		}
-
-		var req ChatRequest
-		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			http.Error(w, "Invalid request", http.StatusBadRequest)
-			return
-		}
-
-		ollamaReq := map[string]interface{}{
-			"model":  req.Model,
-			"prompt": req.Message,
-			"stream": false,
-		}
-		ollamaBody, _ := json.Marshal(ollamaReq)
-
-		resp, err := http.Post("http://localhost:11434/api/generate", "application/json", bytes.NewBuffer(ollamaBody))
-		if err != nil {
-			http.Error(w, fmt.Sprintf("Error communicating with Ollama: %v", err), http.StatusInternalServerError)
-			return
-		}
-		defer resp.Body.Close()
-
-		// Read the full response body
-		body, err := io.ReadAll(resp.Body)
-		if err != nil {
-			http.Error(w, "Error reading Ollama response", http.StatusInternalServerError)
-			return
-		}
-
-		var ollamaResp OllamaResponse
-		if err := json.Unmarshal(body, &ollamaResp); err != nil {
-			http.Error(w, "Error parsing Ollama response", http.StatusInternalServerError)
-			return
-		}
-
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(ChatResponse{Response: ollamaResp.Response})
+	    if r.Method != http.MethodPost {
+	        http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+	        return
+	    }
+	
+	    r.ParseMultipartForm(10 << 20) // 10MB limit
+	    model := r.FormValue("model")
+	    message := r.FormValue("message")
+	
+	    if model == "" {
+	        http.Error(w, "Model is required", http.StatusBadRequest)
+	        return
+	    }
+	
+	    ollamaReq := map[string]interface{}{
+	        "model":  model,
+	        "prompt": message,
+	        "stream": false,
+	    }
+	    ollamaBody, _ := json.Marshal(ollamaReq)
+	
+	    resp, err := http.Post("http://localhost:11434/api/generate", "application/json", bytes.NewBuffer(ollamaBody))
+	    if err != nil {
+	        http.Error(w, fmt.Sprintf("Error communicating with Ollama: %v", err), http.StatusInternalServerError)
+	        return
+	    }
+	    defer resp.Body.Close()
+	
+	    body, err := io.ReadAll(resp.Body)
+	    if err != nil {
+	        http.Error(w, "Error reading Ollama response", http.StatusInternalServerError)
+	        return
+	    }
+	
+	    var ollamaResp OllamaResponse
+	    if err := json.Unmarshal(body, &ollamaResp); err != nil {
+	        http.Error(w, "Error parsing Ollama response", http.StatusInternalServerError)
+	        return
+	    }
+	
+	    w.Header().Set("Content-Type", "application/json")
+	    json.NewEncoder(w).Encode(ChatResponse{Response: ollamaResp.Response})
 	})
 
 	// API to handle file upload
