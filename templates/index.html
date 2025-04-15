@@ -10,15 +10,21 @@
 <body>
     <div class="container">
         <h1>Ollama Chat</h1>
-        <div class="model-selector">
-            <label for="model">Select Model:</label>
-            <select id="model">
-                <option value="">Select a model</option>
+        <div class="conversation-type">
+            <select id="conv-type">
+                <option value="chat">Chat</option>
+                <option value="code">Code</option>
+                <option value="debug">Debug</option>
             </select>
         </div>
         <div class="chat-window" id="chat-window"></div>
         <div class="input-area">
+            <input type="file" id="file-input" style="display: none;">
+            <button onclick="document.getElementById('file-input').click()">Attach File</button>
             <textarea id="message" placeholder="Type your message..." rows="3"></textarea>
+            <select id="model" style="margin-left: 10px;">
+                <option value="">Select Model</option>
+            </select>
             <button onclick="sendMessage()">Send</button>
         </div>
     </div>
