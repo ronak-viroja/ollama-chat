@@ -21,6 +21,16 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 });
 
+function updateFileName() {
+    const fileInput = document.getElementById("file-input");
+    const fileNameSpan = document.getElementById("file-name");
+    if (fileInput.files.length > 0) {
+        fileNameSpan.textContent = fileInput.files[0].name;
+    } else {
+        fileNameSpan.textContent = "";
+    }
+}
+
 function sendMessage() {
     const model = document.getElementById("model").value;
     const message = document.getElementById("message").value.trim();
@@ -81,7 +91,7 @@ function sendMessage() {
 
         htmlContent += escapeHtml(response.slice(lastIndex));
         htmlContent = htmlContent.replace(/\b(Running the Server|Important)\b/g, '<span class="highlight">$&</span>');
-        botDiv.innerHTML = htmlContent; // Removed "Bot: " prefix
+        botDiv.innerHTML = htmlContent;
         chatWindow.appendChild(botDiv);
         chatWindow.scrollTop = chatWindow.scrollHeight;
 
@@ -101,6 +111,7 @@ function sendMessage() {
 
     document.getElementById("message").value = "";
     fileInput.value = ""; // Clear file input
+    document.getElementById("file-name").textContent = ""; // Clear filename display
 }
 
 function copyCode(button) {
