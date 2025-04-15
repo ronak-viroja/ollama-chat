@@ -5,7 +5,7 @@ body {
     background-color: #1a1a1a;
     color: #fff;
     height: 100vh;
-    overflow: hidden;
+    overflow: auto;
 }
 
 .container {
@@ -37,6 +37,7 @@ h1 {
     color: #fff;
     border: 1px solid #444;
     border-radius: 4px;
+    min-width: 100px; /* Ensure visibility */
 }
 
 .chat-window {
@@ -46,7 +47,7 @@ h1 {
     padding: 10px;
     margin-bottom: 20px;
     background: #1e1e1e;
-    max-height: calc(100vh - 200px);
+    max-height: calc(100vh - 150px); /* Adjusted for input area */
 }
 
 .message {
@@ -76,6 +77,7 @@ h1 {
     padding: 10px;
     border-radius: 4px;
     overflow-x: auto;
+    white-space: pre-wrap; /* Ensure text wraps */
 }
 
 .message.bot pre code {
@@ -91,6 +93,8 @@ h1 {
     gap: 10px;
     align-items: center;
     margin-top: auto;
+    padding: 10px 0;
+    flex-wrap: wrap; /* Allow wrapping if screen is too narrow */
 }
 
 textarea {
@@ -101,6 +105,7 @@ textarea {
     background: #3a3a3a;
     color: #fff;
     resize: none;
+    min-width: 200px; /* Ensure minimum width */
 }
 
 button {
@@ -110,6 +115,7 @@ button {
     border: none;
     border-radius: 4px;
     cursor: pointer;
+    white-space: nowrap; /* Prevent button text wrap */
 }
 
 button:hover {
@@ -121,6 +127,7 @@ button:hover {
     padding: 5px 10px;
     margin-left: 10px;
     cursor: pointer;
+    white-space: nowrap;
 }
 
 .copy-btn:hover {
