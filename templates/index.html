@@ -19,8 +19,9 @@
         </div>
         <div class="chat-window" id="chat-window"></div>
         <div class="input-area">
-            <input type="file" id="file-input" style="display: none;">
+            <input type="file" id="file-input" style="display: none;" onchange="updateFileName()">
             <button onclick="document.getElementById('file-input').click()">Attach File</button>
+            <span id="file-name" class="file-name"></span>
             <textarea id="message" placeholder="Type your message..." rows="3"></textarea>
             <select id="model" style="margin-left: 10px;">
                 <option value="">Select Model</option>
