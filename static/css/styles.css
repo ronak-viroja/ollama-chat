@@ -1,16 +1,19 @@
 body {
     font-family: Arial, sans-serif;
     margin: 0;
-    padding: 20px;
+    padding: 0;
     background-color: #1a1a1a;
     color: #fff;
     height: 100vh;
-    overflow: auto;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: stretch;
 }
 
 .container {
-    max-width: 100%;
     width: 100%;
+    max-width: 100%;
     height: 100%;
     margin: 0;
     background: #2a2a2a;
@@ -19,12 +22,14 @@ body {
     box-shadow: none;
     display: flex;
     flex-direction: column;
+    overflow: hidden;
 }
 
 h1 {
     text-align: center;
     color: #fff;
     margin-bottom: 20px;
+    font-size: clamp(1.5rem, 4vw, 2.5rem); /* Responsive font size */
 }
 
 .conversation-type, .model-selector {
@@ -37,17 +42,18 @@ h1 {
     color: #fff;
     border: 1px solid #444;
     border-radius: 4px;
-    min-width: 100px; /* Ensure visibility */
+    min-width: 100px;
 }
 
 .chat-window {
     flex: 1;
-    overflow-y: auto;
+    overflow-y: auto; /* Only vertical scroll if needed */
     border: 1px solid #444;
     padding: 10px;
     margin-bottom: 20px;
     background: #1e1e1e;
-    max-height: calc(100vh - 150px); /* Adjusted for input area */
+    word-wrap: break-word; /* Prevent horizontal overflow */
+    overflow-x: hidden; /* Remove horizontal scroll */
 }
 
 .message {
@@ -55,46 +61,61 @@ h1 {
     line-height: 1.5;
     padding: 8px;
     border-radius: 4px;
+    width: fit-content; /* Dynamic width based on content */
+    max-width: 80%; /* Limit to 80% of container */
+    word-wrap: break-word; /* Ensure text wraps */
 }
 
 .message.user {
     text-align: right;
     color: #2c3e50;
     background: #e6f3ff;
-    margin-left: 20%;
+    margin-left: auto;
 }
 
 .message.bot {
     text-align: left;
     color: #fff;
     background: #333;
-    margin-right: 20%;
+    margin-right: auto;
 }
 
 .message.bot pre {
     background: #000;
-    color: #f8f8f8; /* High contrast for readability */
+    color: #f8f8f8;
     padding: 10px;
     border-radius: 4px;
     overflow-x: auto;
-    white-space: pre-wrap; /* Ensure text wraps */
+    white-space: pre-wrap;
+    width: 100%; /* Full width for code blocks */
 }
 
 .message.bot pre code {
-    color: #f8f8f8; /* Ensure code text is readable */
+    color: #f8f8f8;
 }
 
 .message.bot .highlight {
-    color: #ff9900; /* Orange highlight for important text */
+    color: #ff9900;
 }
 
 .input-area {
     display: flex;
     gap: 10px;
     align-items: center;
-    margin-top: auto;
     padding: 10px 0;
-    flex-wrap: wrap; /* Allow wrapping if screen is too narrow */
+    flex-wrap: wrap; /* Wrap on small screens */
+}
+
+.file-name {
+    color: #fff;
+    background: #444;
+    padding: 5px 10px;
+    border-radius: 4px;
+    margin-right: 10px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 150px;
 }
 
 textarea {
@@ -105,7 +126,8 @@ textarea {
     background: #3a3a3a;
     color: #fff;
     resize: none;
-    min-width: 200px; /* Ensure minimum width */
+    min-width: 200px;
+    max-width: 100%; /* Responsive width */
 }
 
 button {
@@ -115,7 +137,7 @@ button {
     border: none;
     border-radius: 4px;
     cursor: pointer;
-    white-space: nowrap; /* Prevent button text wrap */
+    white-space: nowrap;
 }
 
 button:hover {
@@ -136,6 +158,20 @@ button:hover {
 
 h2 {
     color: #ff9900;
-    font-size: 1.2em;
+    font-size: clamp(1rem, 2.5vw, 1.2em);
     margin-top: 20px;
+}
+
+@media (max-width: 600px) {
+    .input-area {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    textarea, button, select {
+        width: 100%;
+        margin-bottom: 10px;
+    }
+    .file-name {
+        margin-bottom: 10px;
+    }
 }
