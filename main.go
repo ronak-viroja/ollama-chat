@@ -28,6 +28,10 @@ type ChatResponse struct {
 	Response string `json:"response"`
 }
 
+type OllamaResponse struct {
+	Response string `json:"response"`
+}
+
 func main() {
 	// Serve static files (CSS, JS)
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
@@ -89,15 +93,20 @@ func main() {
 
 		resp, err := http.Post("http://localhost:11434/api/generate", "application/json", bytes.NewBuffer(ollamaBody))
 		if err != nil {
-			http.Error(w, "Error communicating with Ollama", http.StatusInternalServerError)
+			http.Error(w, fmt.Sprintf("Error communicating with Ollama: %v", err), http.StatusInternalServerError)
 			return
 		}
 		defer resp.Body.Close()
 
-		var ollamaResp struct {
-			Response string `json:"response"`
+		// Read the full response body
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			http.Error(w, "Error reading Ollama response", http.StatusInternalServerError)
+			return
 		}
-		if err := json.NewDecoder(resp.Body).Decode(&ollamaResp); err != nil {
+
+		var ollamaResp OllamaResponse
+		if err := json.Unmarshal(body, &ollamaResp); err != nil {
 			http.Error(w, "Error parsing Ollama response", http.StatusInternalServerError)
 			return
 		}
@@ -112,15 +121,16 @@ func main() {
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 			return
 		}
-		file, _, err := r.FormFile("file")
+		r.ParseMultipartForm(10 << 20) // 10MB limit
+		file, handler, err := r.FormFile("file")
 		if err != nil {
 			http.Error(w, "Error uploading file", http.StatusBadRequest)
 			return
 		}
 		defer file.Close()
 
-		// Log filename (expandable to process file later)
-		fmt.Println("File uploaded:", r.FormValue("file"))
+		// Save file temporarily (optional, for now just log)
+		fmt.Printf("Uploaded File: %s, Size: %d bytes\n", handler.Filename, handler.Size)
 		w.Write([]byte("File uploaded successfully"))
 	})
 
